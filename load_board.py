@@ -28,7 +28,7 @@ def board_coordinates():
     for col in range(BOARDSIZE):
         for lin in range(BOARDSIZE):
             cords.add((col, lin))
-    cords.add(int(BOARDSIZE / 2))
+    cords.add((BOARDSIZE / 2, BOARDSIZE))
     return cords
 
 
@@ -63,7 +63,7 @@ def add_car(board, carkey, car_info, cars):
     return board, cars
 
 
-def load_board(cars_dict):
+def load_board_(cars_dict):
     board = create_starter_board()
     current_cars = {}
     for carkey in cars_dict:
@@ -71,6 +71,5 @@ def load_board(cars_dict):
         board, current_cars = added_car[0], added_car[1]
     return board
 
-
-loaded_board = load_board(car_dict)
-print('\n'.join(map(str, loaded_board)))
+# loaded_board = load_board(car_dict)
+# print('\n'.join(map(str, loaded_board)))

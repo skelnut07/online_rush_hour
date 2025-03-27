@@ -113,3 +113,5 @@ class Car:
 
         return self.__name
 
+    def get_info(self):
+        return [self.__length, [self.__location[0], self.__location[1]], self.__direction]
