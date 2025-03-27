@@ -50,7 +50,7 @@ class Game:
 
 if __name__ == "__main__":
     """update file location next line"""
-    car_dict = load_json("C:\\Users\\ilans\\OneDrive\\Desktop\\school\\final_project_cyber\\car_config.json")
+    car_dict = load_json("C:\\Users\\פיזיקה\\PycharmProjects\\online_rush_hour\\car_config.json")
     print(car_dict)
     boardy = Board()
     game = Game(boardy)

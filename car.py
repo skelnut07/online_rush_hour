@@ -40,6 +40,7 @@ class Car:
                 coords.append((self.__location[0], location1))
                 location1 += 1
         return coords
+
     def possible_moves(self):
         """
         :return: A dictionary of strings describing possible movements permitted by this car.
@@ -56,7 +57,7 @@ class Car:
         #           'a': "another unknown action"}
         # A car returning this dictionary supports the commands 'f','d','a'.
 
-        return {"u":"up", "d":"down"} if self.__direction == 0 else {"r":"right", "l":"left"}
+        return {"u": "up", "d": "down"} if self.__direction == 0 else {"r": "right", "l": "left"}
 
     def movement_requirements(self, movekey):
         """
@@ -81,6 +82,7 @@ class Car:
                 pass
             return list1
         return False
+
     def move(self, movekey):
         """
         :param movekey: A string representing the key of the required move.
@@ -99,9 +101,10 @@ class Car:
                 new_head_location[1] -= 1
             self.__location = (new_head_location)
             return True
-    #change location
+        #change location
 
         return False
+
     def get_name(self):
         """
         :return: The name of this car.
@@ -110,6 +113,3 @@ class Car:
 
         return self.__name
 
-
-# car1 = Car("P", 4, [1, 2], 1)
-# car2 = Car("O", 3, [3,5], 0)

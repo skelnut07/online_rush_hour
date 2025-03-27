@@ -169,25 +169,3 @@ class Board:
                 self.board[(exact_location[0][0])][(exact_location[0][1])] = name
             return True
         return False
-
-# Board1 = Board()
-# car1 = Car("I", 3, (3, 3), 1)
-# car2 = Car("P", 3, (0, 2), 1)
-# car3 = Car("S", 2, (1, 5), 0)
-# car4 = Car("K", 32, (5, 0), 1)
-# Board1.add_car(car2)
-# Board1.add_car(car1)
-# print(Board1, '\n')
-# Board1.move_car("I", 'r')
-# print(Board1, '\n')
-# Board1.move_car("I", 'r')
-# print(Board1, '\n')
-# Board1.add_car(car3)
-# print(Board1, '\n')
-# Board1.move_car("P", 'r')
-# print(Board1, '\n')
-# Board1.move_car("S", 'u')
-# print(Board1, '\n')
-#
-# Board1.add_car(car4)
-# print(Board1, '\n')
