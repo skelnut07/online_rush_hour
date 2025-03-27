@@ -52,10 +52,11 @@ class Game:
             where_ = client_socket.recv(1024).decode()
             print(f"Received from client: {where_}")
 
-        if not self.board.move_car(car_, where_):
-            error_message = "ERROR: Invalid move attempt. Try again."
-            print(error_message)
-            client_socket.send(error_message.encode())
+        if self.board.move_car(car_, where_):
+            pass
+        else:
+            print("Something didn't work")
+
 
     def load_car_dict(self):
         car_dict_ = {}
@@ -73,11 +74,11 @@ class Game:
                 print(self.board.cell_content(self.board.target_location()))
                 print(self.board)
                 msg = json.dumps(self.load_car_dict())
-                print(msg)
+                # print(msg)
                 client_socket.send(msg.encode('utf-8'))
-                print(msg)
+                # print(msg)
                 msg = client_socket.recv(1024).decode()
-                print(msg)
+                # print(msg)
                 self.__single_turn(client_socket)
 
             print("YOU WIN")
@@ -90,30 +91,11 @@ class Game:
             print(f"Connection error: {e}")
         finally:
             client_socket.close()
-        # while not self.board.cell_content(self.board.target_location()):
-        #     print(self.board.cell_content(self.board.target_location()))
-        #     print(self.board)
-        #     msg = json.dumps(self.load_car_dict())
-        #     print(msg)
-        #     client_socket.send(msg.encode('utf-8'))
-        #     print(msg)
-        #     msg = client_socket.recv(1024).decode()
-        #     print(msg)
-        #     self.__single_turn(client_socket)
-        #
-        #
-        # print("YOU WIN")
-        # client_socket.send("W".encode())
-        # """WHAT NEEDS TO BE SENT: self.board.cars"""
-        # msg = client_socket.recv(1024).decode()
-        # print(msg)
-        # print(self.board)
 
 
 if __name__ == "__main__":
     """update file location next line"""
     car_dict = load_json("C:\\Users\\פיזיקה\\PycharmProjects\\online_rush_hour\\car_config.json")
-    print(car_dict)
     boardy = Board()
     game = Game(boardy)
 
