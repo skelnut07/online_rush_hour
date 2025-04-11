@@ -74,28 +74,25 @@ class Game:
                 print(self.board.cell_content(self.board.target_location()))
                 print(self.board)
                 msg = json.dumps(self.load_car_dict())
-                # print(msg)
                 client_socket.send(msg.encode('utf-8'))
-                # print(msg)
                 msg = client_socket.recv(1024).decode()
-                # print(msg)
                 self.__single_turn(client_socket)
-
             print("YOU WIN")
             client_socket.send("W".encode())
             msg = client_socket.recv(1024).decode()
             print(msg)
             print(self.board)
-
-        except (ConnectionAbortedError, socket.error) as e:
-            print(f"Connection error: {e}")
+        except (ConnectionResetError, BrokenPipeError, socket.error) as e:
+            print(f"Connection error occurred: {e}")
+            # Clean up any resources, log the error, or try to notify the user
         finally:
             client_socket.close()
+            print("Client disconnected, socket closed.")
 
 
 if __name__ == "__main__":
     """update file location next line"""
-    car_dict = load_json("C:\\Users\\פיזיקה\\PycharmProjects\\online_rush_hour\\car_config.json")
+    car_dict = load_json("C:\\Users\\ilans\\OneDrive\\Desktop\\me\\school\\final_project_cyber\\online_rush_hour\\car_config.json")
     boardy = Board()
     game = Game(boardy)
 
