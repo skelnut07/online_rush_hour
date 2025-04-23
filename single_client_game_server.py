@@ -3,24 +3,37 @@ from helper import load_json
 from board import Board
 import socket
 import json
-import threading
+
 
 LISTENING_PORT = 64131
-CONFIG_PATH = "C:\\Users\\ilans\\OneDrive\\Desktop\\me\\school\\final_project_cyber\\online_rush_hour\\car_config.json"
+
 
 class Game:
     """
-    Game logic for a single player session
+    Add class description here
     """
 
     def __init__(self, board):
         """
         Initialize a new Game object.
-        :param board: An object of type Board
+        :param board: An object of type board
         """
         self.board = board
 
     def __single_turn(self, client_socket):
+        """
+        The function runs one round of the game :
+            1. Get user's input of: what color car to move, and what
+                direction to move it.
+            2. Check if the input is valid.
+            3. Try moving car according to user's input.
+
+        Before and after every stage of a turn, you may print additional
+        information for the user, e.g., printing the board. In particular,
+        you may support additional features, (e.g., hints) as long as they
+        don't interfere with the API.
+        """
+        # implement your code here (and then delete the next line - 'pass')
         car_ = ""
         while car_ not in self.board.cars.keys():
             print("which car do you want to move? Choose one of the available cars.")
@@ -40,8 +53,11 @@ class Game:
             where_ = client_socket.recv(1024).decode()
             print(f"Received from client: {where_}")
 
-        if not self.board.move_car(car_, where_):
+        if self.board.move_car(car_, where_):
+            pass
+        else:
             print("Something didn't work")
+
 
     def load_car_dict(self):
         car_dict_ = {}
@@ -60,47 +76,45 @@ class Game:
                 print(self.board)
                 msg = json.dumps(self.load_car_dict())
                 client_socket.send(msg.encode('utf-8'))
-                client_socket.recv(1024)  # Receive acknowledgment
+                msg = client_socket.recv(1024).decode()
                 self.__single_turn(client_socket)
             print("YOU WIN")
             client_socket.send("W".encode())
-            client_socket.recv(1024)  # Receive final acknowledgment
+            msg = client_socket.recv(1024).decode()
+            print(msg)
             print(self.board)
         except (ConnectionResetError, BrokenPipeError, socket.error) as e:
             print(f"Connection error occurred: {e}")
+            # Clean up any resources, log the error, or try to notify the user
         finally:
             client_socket.close()
             print("Client disconnected, socket closed.")
 
 
-def handle_client(client_socket, client_address, car_dict):
-    print(f"Connection established with {client_address}")
+if __name__ == "__main__":
+    """update file location next line"""
+    car_dict = load_json("C:\\Users\\ilans\\OneDrive\\Desktop\\me\\school\\final_project_cyber\\online_rush_hour\\car_config.json")
     boardy = Board()
+    game = Game(boardy)
+
     for carkey in car_dict:
         boardy.add_car(Car(carkey, car_dict[carkey][0], car_dict[carkey][1], car_dict[carkey][2]))
 
-    game = Game(boardy)
-    game.play(client_socket)
-    print(f"Game session with {client_address} ended.")
-
-
-if __name__ == "__main__":
-    car_dict = load_json(CONFIG_PATH)
-
+    """launching server, connecting to client"""
     host = "127.0.0.1"
     port = LISTENING_PORT
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((host, port))
-    server_socket.listen(5)
+    server_socket.listen(1)
     print(f"Server listening on {host}:{port}")
 
-    try:
-        while True:
-            client_socket, client_address = server_socket.accept()
-            client_thread = threading.Thread(target=handle_client,args=(client_socket, client_address, car_dict))
-            client_thread.start()
-    except KeyboardInterrupt:
-        print("\nShutting down server.")
-    finally:
-        server_socket.close()
+    client_socket, client_address = server_socket.accept()
+    print(f"Connection established with {client_address}")
+
+    play_game = Game(boardy)
+    play_game.play(client_socket)
+
+    client_socket.close()
+    server_socket.close()
+
