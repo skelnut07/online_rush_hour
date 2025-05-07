@@ -1,19 +1,8 @@
 import socket
 import json
-from load_board import load_board_
-from cryptography.fernet import Fernet
+from encryption import encrypt_message, decrypt_message
 
 # Shared secret key (use same key in both client and server)
-SECRET_KEY = b'vIqEpCGZJZGdP_uzyKcTVmLNFhB2ItKnODwPtBq0yjc='
-fernet = Fernet(SECRET_KEY)
-
-
-def encrypt_message(message: str) -> bytes:
-    return fernet.encrypt(message.encode())
-
-
-def decrypt_message(encrypted_message: bytes) -> str:
-    return fernet.decrypt(encrypted_message).decode()
 
 
 SERVER_IP = "127.0.0.1"
@@ -77,15 +66,30 @@ def start_client(host=SERVER_IP, port=SERVER_PORT):
     client_socket.connect((host, port))
 
     print("""Welcome!
-    pick your car by writing down the letter it is shown as,
-    pick direction to move with u,d,r,l
+    Pick your car by writing down the letter it is shown as,
+    Pick direction to move with u,d,r,l
     """)
 
     try:
-        while True:
-            encrypted_msg = client_socket.recv(4096)
-            msg = decrypt_message(encrypted_msg)
+        # Receive and respond to difficulty prompt
+        difficulty_prompt = decrypt_message(client_socket.recv(4096))
+        print(difficulty_prompt)
+        difficulty = input("Enter difficulty (easy/medium/hard): ").strip().lower()
+        client_socket.send(encrypt_message(difficulty))
 
+        # Loop until valid difficulty is accepted by server
+        while True:
+            response = decrypt_message(client_socket.recv(4096))
+            if response.startswith("Invalid difficulty"):
+                print(response)
+                difficulty = input("Enter difficulty (easy/medium/hard): ").strip().lower()
+                client_socket.send(encrypt_message(difficulty))
+            else:
+                # Proceed to game
+                msg = response
+                break
+
+        while True:
             if msg == "W":
                 break
             elif msg == "cm":
@@ -96,15 +100,19 @@ def start_client(host=SERVER_IP, port=SERVER_PORT):
                 client_socket.send(encrypt_message(response))
             elif msg.startswith("ERROR"):
                 print(msg)
-                client_socket.send(encrypt_message("Error received"))
+                msg = decrypt_message(client_socket.recv(4096))
+                continue
             else:
                 car_data = json.loads(msg)
                 board = load_board_(car_data)
-                print('\n'.join(map(str, board)))
+                for row in board:
+                    print(" ".join(row))
                 client_socket.send(encrypt_message("received board"))
 
-        print("YOU WIN!")
-        client_socket.send(encrypt_message("OVER"))
+            # Receive next message
+            msg = decrypt_message(client_socket.recv(4096))
+
+
     except Exception as e:
         print(f"Error: {e}")
     finally:

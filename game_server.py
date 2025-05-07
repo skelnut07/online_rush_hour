@@ -1,26 +1,20 @@
 from car import Car
 from helper import load_json
 from board import Board
-from cryptography.fernet import Fernet
 import socket
 import json
 import threading
+from encryption import encrypt_message, decrypt_message
 
 SERVER_IP = "127.0.0.1"
 LISTENING_PORT = 50000
-CONFIG_PATH = "C:\\Users\\ilans\\OneDrive\\Desktop\\me\\school\\final_project_cyber\\online_rush_hour\\car_config.json"
 
-# Shared secret key (use same key in both client and server)
-SECRET_KEY = b'vIqEpCGZJZGdP_uzyKcTVmLNFhB2ItKnODwPtBq0yjc='
-fernet = Fernet(SECRET_KEY)
-
-
-def encrypt_message(message: str) -> bytes:
-    return fernet.encrypt(message.encode())
-
-
-def decrypt_message(encrypted_message: bytes) -> str:
-    return fernet.decrypt(encrypted_message).decode()
+# Replace these with actual file paths to your JSON config files
+DIFFICULTY_PATHS = {
+    "easy": "C:\\Users\\ilans\\OneDrive\\Desktop\\me\\school\\final_project_cyber\\online_rush_hour\\easy_config.json",
+    "medium": "C:\\Users\\ilans\\OneDrive\\Desktop\\me\\school\\final_project_cyber\\online_rush_hour\\medium_config.json",
+    "hard": "C:\\Users\\ilans\\OneDrive\\Desktop\\me\\school\\final_project_cyber\\online_rush_hour\\hard_config.json"
+}
 
 
 class Game:
@@ -32,33 +26,41 @@ class Game:
         self.board = board
 
     def __recv_decrypted(self, client_socket):
-        return decrypt_message(client_socket.recv(2048))
+        try:
+            data = client_socket.recv(2048)
+            if not data:
+                raise ConnectionResetError("Client disconnected.")
+            return decrypt_message(data)
+        except Exception as e:
+            print(f"Receive error: {e}")
+            raise
 
     def __send_encrypted(self, client_socket, msg):
-        client_socket.send(encrypt_message(msg))
+        try:
+            client_socket.send(encrypt_message(msg))
+        except Exception as e:
+            print(f"Send error: {e}")
+            raise
 
     def __single_turn(self, client_socket):
         car_ = ""
         while car_ not in self.board.cars.keys():
-            print("which car do you want to move? Choose one of the available cars.")
             self.__send_encrypted(client_socket, "cm")
             car_ = self.__recv_decrypted(client_socket)
-            print(f"Received from client: {car_}")
+            print(f"Received car selection: {car_}")
 
             if car_ not in self.board.cars.keys():
-                error_message = "ERROR: Invalid car selection, please try again."
-                self.__send_encrypted(client_socket, error_message)
+                self.__send_encrypted(client_socket, "ERROR: Invalid car selection, please try again.")
 
         side = self.board.cars[car_].get_info()[2]
         where_ = ''
         while not ((side == 0 and where_ in ['u', 'd']) or (side == 1 and where_ in ['r', 'l'])):
-            print(f"Invalid direction for car {car_}. Try again.")
             self.__send_encrypted(client_socket, "cd")
             where_ = self.__recv_decrypted(client_socket)
-            print(f"Received from client: {where_}")
+            print(f"Received direction: {where_}")
 
         if not self.board.move_car(car_, where_):
-            print("Something didn't work")
+            print("Move failed.")
 
     def load_car_dict(self):
         return {car.get_name(): car.get_info() for car in self.board.cars.values()}
@@ -66,7 +68,6 @@ class Game:
     def play(self, client_socket):
         try:
             while not self.board.cell_content(self.board.target_location()):
-                print(self.board.cell_content(self.board.target_location()))
                 print(self.board)
                 msg = json.dumps(self.load_car_dict())
                 self.__send_encrypted(client_socket, msg)
@@ -76,27 +77,42 @@ class Game:
             print("YOU WIN")
             self.__send_encrypted(client_socket, "W")
             self.__recv_decrypted(client_socket)  # Final acknowledgment
-            print(self.board)
-        except (ConnectionResetError, BrokenPipeError, socket.error) as e:
-            print(f"Connection error occurred: {e}")
+        except Exception as e:
+            print(f"Connection error occurred during game: {e}")
         finally:
             client_socket.close()
             print("Client disconnected, socket closed.")
 
 
-def handle_client(client_socket, client_address, car_dict):
+def handle_client(client_socket, client_address, difficulty_paths):
     print(f"Connection established with {client_address}")
-    boardy = Board()
-    for carkey in car_dict:
-        boardy.add_car(Car(carkey, car_dict[carkey][0], car_dict[carkey][1], car_dict[carkey][2]))
+    try:
+        client_socket.send(encrypt_message("Choose difficulty: easy, medium, hard"))
+        difficulty = decrypt_message(client_socket.recv(1024)).strip().lower()
 
-    game = Game(boardy)
-    game.play(client_socket)
-    print(f"Game session with {client_address} ended.")
+        while difficulty not in difficulty_paths:
+            client_socket.send(encrypt_message("Invalid difficulty. Choose: easy, medium, hard"))
+            difficulty = decrypt_message(client_socket.recv(1024)).strip().lower()
+
+        config_path = difficulty_paths[difficulty]
+        car_dict = load_json(config_path)
+
+        boardy = Board()
+        for carkey in car_dict:
+            boardy.add_car(Car(carkey, *car_dict[carkey]))
+
+        game = Game(boardy)
+        game.play(client_socket)
+        print(f"Game session with {client_address} ended.")
+
+    except Exception as e:
+        print(f"Connection error with {client_address}: {e}")
+    finally:
+        client_socket.close()
+        print("Client disconnected, socket closed.")
 
 
 if __name__ == "__main__":
-    car_dict = load_json(CONFIG_PATH)
     host = SERVER_IP
     port = LISTENING_PORT
 
@@ -108,7 +124,10 @@ if __name__ == "__main__":
     try:
         while True:
             client_socket, client_address = server_socket.accept()
-            client_thread = threading.Thread(target=handle_client, args=(client_socket, client_address, car_dict))
+            client_thread = threading.Thread(
+                target=handle_client,
+                args=(client_socket, client_address, DIFFICULTY_PATHS)
+            )
             client_thread.start()
     except KeyboardInterrupt:
         print("\nShutting down server.")
