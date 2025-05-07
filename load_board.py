@@ -71,5 +71,3 @@ def load_board_(cars_dict):
         board, current_cars = added_car[0], added_car[1]
     return board
 
-# loaded_board = load_board(car_dict)
-# print('\n'.join(map(str, loaded_board)))
