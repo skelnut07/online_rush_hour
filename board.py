@@ -1,15 +1,6 @@
 from car import Car
 from copy import deepcopy
 
-# SOME INSTRUCTIONS:
-# ALL Board fields must be private!!
-# if you want to make more functions for yourself, they must be private!
-# The board must be 7x7 with the fourth row having an extra spot, coordinate (3,7)
-# Move method: If the player tries to make an illegal move, you need to return False and print
-#                 out what they did wrong
-# Add Car method: No need to print out what went wrong, the user doesnt get to decide whether cars are added or not
-# Remember, you can use all of the car's public methods and fields. Anything private you can't use!!
-
 BOARDSIZE = 7
 
 

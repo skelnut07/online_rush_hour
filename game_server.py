@@ -23,9 +23,18 @@ class Game:
     """
 
     def __init__(self, board):
+        """
+        Initializes a Game object with a given board.
+        :param board: Board object containing cars and grid layout
+        """
         self.board = board
 
     def __recv_decrypted(self, client_socket):
+        """
+        Receives encrypted data from the client, decrypts it, and returns the decoded message.
+        :param client_socket: socket object of the connected client
+        :return: Decrypted string message from client
+        """
         try:
             data = client_socket.recv(2048)
             if not data:
@@ -36,6 +45,11 @@ class Game:
             raise
 
     def __send_encrypted(self, client_socket, msg):
+        """
+        Encrypts and sends a message to the client.
+        :param client_socket: socket object of the connected client
+        :param msg: string message to be encrypted and sent
+        """
         try:
             client_socket.send(encrypt_message(msg))
         except Exception as e:
@@ -43,6 +57,11 @@ class Game:
             raise
 
     def __single_turn(self, client_socket):
+        """
+        Executes a single game turn: receives car selection and move direction from the client,
+        validates and applies the move if possible.
+        :param client_socket: socket object of the connected client
+        """
         car_ = ""
         while car_ not in self.board.cars.keys():
             self.__send_encrypted(client_socket, "cm")
@@ -63,9 +82,17 @@ class Game:
             print("Move failed.")
 
     def load_car_dict(self):
+        """
+        Returns a dictionary containing the current car configuration on the board.
+        :return: dict mapping car name to [length, location, direction]
+        """
         return {car.get_name(): car.get_info() for car in self.board.cars.values()}
 
     def play(self, client_socket):
+        """
+        Main gameplay loop for a single client. Sends board updates and receives moves until the game is won.
+        :param client_socket: socket object of the connected client
+        """
         try:
             while not self.board.cell_content(self.board.target_location()):
                 print(self.board)
@@ -85,6 +112,12 @@ class Game:
 
 
 def handle_client(client_socket, client_address, difficulty_paths):
+    """
+    Handles a newly connected client: receives difficulty, loads board, and starts the game.
+    :param client_socket: socket object representing the client
+    :param client_address: tuple with client IP and port
+    :param difficulty_paths: dictionary mapping difficulty names to JSON file paths
+    """
     print(f"Connection established with {client_address}")
     try:
         client_socket.send(encrypt_message("Choose difficulty: easy, medium, hard"))
@@ -112,7 +145,10 @@ def handle_client(client_socket, client_address, difficulty_paths):
         print("Client disconnected, socket closed.")
 
 
-if __name__ == "__main__":
+def main():
+    """
+    Entry point for the server. Binds the socket, listens for clients, and spawns a thread for each new connection.
+    """
     host = SERVER_IP
     port = LISTENING_PORT
 
@@ -133,3 +169,7 @@ if __name__ == "__main__":
         print("\nShutting down server.")
     finally:
         server_socket.close()
+
+
+if __name__ == "__main__":
+    main()

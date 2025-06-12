@@ -91,6 +91,7 @@ def start_client(host=SERVER_IP, port=SERVER_PORT):
 
         while True:
             if msg == "W":
+                print("YOU WIN")
                 break
             elif msg == "cm":
                 response = input("Which car do you want to move? ")

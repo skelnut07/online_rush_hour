@@ -45,17 +45,6 @@ class Car:
         """
         :return: A dictionary of strings describing possible movements permitted by this car.
         """
-        # For this car type, keys are from 'udrl'.
-        # The keys for vertical cars are 'u' and 'd'.
-        # The keys for horizontal cars are 'l' and 'r'.
-        # You may choose appropriate strings.
-        # implement your code and erase the "pass"
-
-        # EXAMPLE: The dictionary returned should look something like this:
-        # result = {'f': "cause the car to fly and reach the Moon",
-        #           'd': "cause the car to dig and reach the core of Earth",
-        #           'a': "another unknown action"}
-        # A car returning this dictionary supports the commands 'f','d','a'.
 
         return {"u": "up", "d": "down"} if self.__direction == 0 else {"r": "right", "l": "left"}
 
